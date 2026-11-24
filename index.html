@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compteur de Chatons</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#f6f4f0; --card:#ffffff; --text:#2b2927; --muted:#78736e; --border:#e6e1da; --shadow:0 10px 28px rgba(43,41,39,0.07); --radius:24px; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:20px 16px 48px; }
+    .container { max-width:1180px; margin:0 auto; }
+    header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:24px; background:var(--card); padding:16px 22px; border-radius:20px; box-shadow:var(--shadow); border:1px solid var(--border); }
+    .title-group { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .title-group h1 { font-family:'Fredoka',sans-serif; font-size:1.55rem; font-weight:700; color:var(--text); }
+    .sync-badge { display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; font-weight:700; padding:5px 12px; border-radius:999px; background:#dcfce7; color:#15803d; }
+    .sync-badge.local { background:#fef3c7; color:#92400e; }
+    .sync-badge.error { background:#fee4e2; color:#b42318; }
+    .sync-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+    .header-actions { display:flex; flex-wrap:wrap; gap:8px; }
+    button { font-family:'Nunito',sans-serif; font-weight:700; border:none; border-radius:14px; padding:10px 15px; font-size:0.9rem; cursor:pointer; transition:transform 0.12s ease,opacity 0.15s ease,background 0.15s ease; display:inline-flex; align-items:center; gap:6px; }
+    button:active { transform:scale(0.96); }
+    button:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
+    .btn-secondary { background:#f2efe9; color:var(--text); }
+    .btn-secondary:hover:not(:disabled) { background:#e7e2d9; }
+    .btn-primary { background:#2b2927; color:#ffffff; }
+    .btn-primary:hover:not(:disabled) { background:#423f3c; }
+    .btn-file-ok { background:#dcfce7; color:#15803d; border:1px solid #86efac; }
+    .btn-file-ok:hover:not(:disabled) { background:#bbf7d0; }
+    .btn-file-warn { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+    .btn-file-warn:hover:not(:disabled) { background:#fde68a; }
+    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-bottom:24px; }
+    .grid.single-view { grid-template-columns:minmax(300px,440px); justify-content:center; }
+    @media (max-width:920px) { .grid { grid-template-columns:1fr; } }
+    .kid-card { background:var(--card); border-radius:var(--radius); padding:22px 20px; box-shadow:var(--shadow); border:3px solid var(--theme-border,#e6e1da); display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; transition:border-color 0.25s ease; }
+    .kid-card::before { content:""; position:absolute; top:0; left:0; right:0; height:10px; background:var(--theme-accent,#ccc); border-radius:20px 20px 0 0; }
+    .cat-avatar { width:96px; height:96px; margin-top:4px; margin-bottom:8px; }
+    .kid-name { font-family:'Fredoka',sans-serif; font-size:1.65rem; font-weight:700; margin-bottom:12px; color:var(--text); }
+    .level-selector { display:flex; gap:8px; justify-content:center; margin-bottom:6px; flex-wrap:wrap; }
+    .level-dot { width:30px; height:30px; border-radius:50%; border:3px solid transparent; padding:0; position:relative; box-shadow:0 2px 6px rgba(0,0,0,0.12); }
+    .level-dot.active { transform:scale(1.18); border-color:#2b2927; box-shadow:0 0 0 3px #fff,0 0 0 5px #2b2927; }
+    .level-dot[disabled] { cursor:default; opacity:1; }
+    .level-label { font-size:0.85rem; font-weight:700; color:var(--muted); margin-bottom:16px; }
+    .score-box { background:var(--theme-soft,#f7f5f2); border-radius:20px; padding:16px 20px; width:100%; margin-bottom:16px; }
+    .kittens-count { font-family:'Fredoka',sans-serif; font-size:3.1rem; line-height:1.05; font-weight:700; color:var(--text); }
+    .kittens-count.negative { color:#b42318; }
+    .kittens-unit { font-size:0.9rem; font-weight:700; color:var(--muted); margin-top:2px; }
+    .money-pill { display:inline-block; margin-top:10px; padding:6px 16px; border-radius:999px; background:#ffffff; font-family:'Fredoka',sans-serif; font-size:1.35rem; font-weight:600; color:var(--text); box-shadow:0 3px 10px rgba(0,0,0,0.06); }
+    .money-pill.zero { color:#b42318; background:#fef3f2; }
+    .quick-controls { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width:100%; margin-bottom:10px; }
+    .btn-minus { background:#fee4e2; color:#b42318; font-size:1.05rem; padding:12px 6px; justify-content:center; }
+    .btn-minus:hover { background:#fecaca; }
+    .btn-plus { background:#dcfce7; color:#15803d; font-size:1.05rem; padding:12px 6px; justify-content:center; }
+    .btn-plus:hover { background:#bbf7d0; }
+    .btn-reason { width:100%; justify-content:center; background:#f4f1ec; color:var(--text); padding:11px; }
+    .btn-reason:hover { background:#eae5dd; }
+    .history-panel { background:var(--card); border-radius:var(--radius); padding:20px 22px; box-shadow:var(--shadow); border:1px solid var(--border); }
+    .history-header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px; }
+    .history-header h2 { font-family:'Fredoka',sans-serif; font-size:1.2rem; }
+    .filter-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+    .filter-tab { padding:6px 12px; font-size:0.82rem; border-radius:999px; background:#f2efe9; color:var(--muted); }
+    .filter-tab.active { background:#2b2927; color:#ffffff; }
+    .history-list { list-style:none; display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; }
+    .history-item { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#faf8f5; border-radius:14px; font-size:0.9rem; gap:10px; }
+    .history-left { display:flex; flex-direction:column; gap:2px; }
+    .history-meta { font-size:0.78rem; color:var(--muted); }
+    .delta-badge { font-family:'Fredoka',sans-serif; font-weight:700; padding:4px 10px; border-radius:999px; font-size:0.95rem; white-space:nowrap; }
+    .delta-pos { background:#dcfce7; color:#15803d; }
+    .delta-neg { background:#fee4e2; color:#b42318; }
+    .delta-neu { background:#e5e7eb; color:#374151; }
+    .empty-state { text-align:center; color:var(--muted); padding:20px; font-size:0.9rem; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(25,23,21,0.45); display:none; align-items:center; justify-content:center; padding:16px; z-index:100; }
+    .modal-backdrop.open { display:flex; }
+    .modal { background:#ffffff; border-radius:24px; padding:24px; width:100%; max-width:540px; box-shadow:0 20px 50px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto; }
+    .modal.wide { max-width:860px; }
+    .modal h3 { font-family:'Fredoka',sans-serif; font-size:1.35rem; margin-bottom:14px; }
+    .form-group { margin-bottom:14px; text-align:left; }
+    .form-group label { display:block; font-size:0.85rem; font-weight:700; margin-bottom:6px; color:var(--muted); }
+    .form-group input, .form-group select, .form-group textarea { width:100%; padding:10px 13px; border:2px solid var(--border); border-radius:14px; font-family:inherit; font-size:0.95rem; font-weight:700; background:#fff; color:var(--text); }
+    .form-group textarea { min-height:110px; font-family:monospace; font-size:0.82rem; font-weight:600; }
+    .helper-box { background:#faf8f5; border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:14px; text-align:left; }
+    .helper-box.euro-box { background:#fef3f2; border-color:#fecaca; }
+    .helper-title { font-size:0.88rem; font-weight:800; margin-bottom:10px; color:var(--text); }
+    .helper-row { display:grid; grid-template-columns:1.4fr 1fr; gap:10px; margin-bottom:10px; }
+    .helper-row.two-equal { grid-template-columns:1fr 1fr; }
+    @media (max-width:560px) { .helper-row, .helper-row.two-equal { grid-template-columns:1fr; } }
+    .stars-group { display:flex; gap:6px; flex-wrap:wrap; }
+    .star-btn { padding:8px 11px; border-radius:12px; background:#f2efe9; color:var(--text); font-size:0.86rem; }
+    .star-btn.active { background:#2b2927; color:#ffffff; }
+    .helper-result { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:#ffffff; border:1px solid var(--border); border-radius:12px; padding:10px 12px; font-size:0.88rem; font-weight:700; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; flex-wrap:wrap; }
+    .rate-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+    .rate-color-info { display:flex; align-items:center; gap:10px; font-weight:700; }
+    .rate-swatch { width:22px; height:22px; border-radius:50%; }
+    .rate-input-wrap { display:flex; align-items:center; gap:6px; }
+    .rate-input-wrap input { width:85px; padding:7px 10px; border:2px solid var(--border); border-radius:10px; font-weight:700; text-align:right; }
+    .link-box { background:#f7f5f2; border:1px solid var(--border); border-radius:14px; padding:12px; margin-bottom:10px; }
+    .link-box-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-weight:800; }
+    .link-url { font-size:0.78rem; color:var(--muted); word-break:break-all; background:#fff; padding:6px 8px; border-radius:8px; border:1px solid var(--border); }
+    .table-wrap { overflow-x:auto; margin-bottom:16px; }
+    table.bareme-table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+    table.bareme-table th, table.bareme-table td { border:1px solid var(--border); padding:8px 10px; text-align:center; }
+    table.bareme-table th { background:#faf8f5; font-weight:800; }
+    table.bareme-table td:first-child, table.bareme-table th:first-child { text-align:left; font-weight:700; }
+    .rank-select { padding:5px 7px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-weight:800; background:#fff; }
+    .cat-label-input { width:100%; min-width:210px; padding:6px 9px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:0.88rem; font-weight:700; color:var(--text); background:#fff; }
+    .bareme-cell-input { width:56px; padding:5px 4px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:0.86rem; font-weight:800; text-align:center; color:var(--text); background:#fff; }
+    .sub-heading { font-family:'Fredoka',sans-serif; font-size:1.05rem; margin:14px 0 8px; }
+    .info-note { font-size:0.82rem; color:var(--muted); background:#faf8f5; border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:12px; line-height:1.45; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header id="appHeader">
+      <div class="title-group">
+        <h1>🐱 Compteur de Chatons</h1>
+        <span class="sync-badge local" id="syncBadge"><span class="sync-dot"></span><span id="syncText">Connexion en cours...</span></span>
+      </div>
+      <div class="header-actions" id="parentActions">
+        <button class="btn-secondary" id="undoBtn" disabled>↩️ Annuler</button>
+        <button class="btn-secondary" id="showerBtn">🚿 Retard douche</button>
+        <button class="btn-secondary" id="baremeBtn">📊 Rangs & Barème</button>
+        <button class="btn-secondary" id="fileSyncBtn" title="Choisir un fichier .json (ex: dans Google Drive) pour la sauvegarde automatique">💾 Sauvegarde fichier</button>
+        <button class="btn-secondary" id="restoreFileBtn" title="Restaurer les données depuis un fichier de sauvegarde .json">📂 Restaurer</button>
+        <button class="btn-secondary" id="linksBtn">🔗 Liens Enfants</button>
+        <button class="btn-primary" id="settingsBtn">⚙️ Taux & Couleurs</button>
+      </div>
+    </header>
+    <main class="grid" id="kidsGrid"></main>
+    <section class="history-panel">
+      <div class="history-header">
+        <h2>📜 Historique des chatons</h2>
+        <div class="filter-tabs" id="historyFilters"></div>
+      </div>
+      <ul class="history-list" id="historyList"></ul>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="reasonModal">
+    <div class="modal">
+      <h3 id="reasonModalTitle">Modifier les chatons</h3>
+      <div class="helper-box">
+        <div class="helper-title">⭐ Aide calcul par catégorie & étoiles (1 à 5)</div>
+        <div class="helper-row">
+          <div>
+            <label for="helperCategory" style="display:block; font-size:0.78rem; font-weight:700; color:var(--muted); margin-bottom:4px;">Catégorie</label>
+            <select id="helperCategory"></select>
+          </div>
+          <div>
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--muted); margin-bottom:4px;">Étoiles</label>
+            <div class="stars-group" id="starsSelector">
+              <button type="button" class="star-btn active" data-stars="1">1 ★</button>
+              <button type="button" class="star-btn" data-stars="2">2 ★</button>
+              <button type="button" class="star-btn" data-stars="3">3 ★</button>
+              <button type="button" class="star-btn" data-stars="4">4 ★</button>
+              <button type="button" class="star-btn" data-stars="5">5 ★</button>
+            </div>
+          </div>
+        </div>
+        <div class="helper-result">
+          <span id="helperSummary">Rang 1 • +0 chaton</span>
+          <button type="button" class="btn-secondary" id="applyHelperBtn" style="padding:6px 11px; font-size:0.82rem;">Appliquer au champ</button>
+        </div>
+      </div>
+
+      <div class="helper-box euro-box">
+        <div class="helper-title" id="euroHelperTitle">💶 Dépenser / Déduire un montant en euros</div>
+        <div class="helper-row two-equal">
+          <div>
+            <label for="euroSpendInput" style="display:block; font-size:0.78rem; font-weight:700; color:var(--muted); margin-bottom:4px;">Montant (€)</label>
+            <input type="number" id="euroSpendInput" step="0.01" min="0" placeholder="Ex: 2.50" style="width:100%; padding:8px 10px; border:2px solid var(--border); border-radius:12px; font-family:inherit; font-size:0.9rem; font-weight:700; background:#fff;" />
+          </div>
+          <div>
+            <label for="euroSpendReason" style="display:block; font-size:0.78rem; font-weight:700; color:var(--muted); margin-bottom:4px;">Achat / Motif (optionnel)</label>
+            <input type="text" id="euroSpendReason" placeholder="Ex: Manga, bonbons..." style="width:100%; padding:8px 10px; border:2px solid var(--border); border-radius:12px; font-family:inherit; font-size:0.9rem; font-weight:700; background:#fff;" />
+          </div>
+        </div>
+        <div class="helper-result">
+          <span id="euroHelperSummary">Saisis un montant en €</span>
+          <button type="button" class="btn-minus" id="applyEuroSpendBtn" style="padding:6px 11px; font-size:0.82rem;">Appliquer la déduction</button>
+        </div>
+      </div>
+
+      <div class="form-group"><label for="reasonDelta">Nombre de chatons (ex: +3 ou -5)</label><input type="number" id="reasonDelta" step="1" placeholder="Ex: 2 ou -3" /></div>
+      <div class="form-group"><label for="reasonText">Motif</label><input type="text" id="reasonText" placeholder="Ex: Devoirs terminés, Achat..." /></div>
+      <div class="modal-actions"><button type="button" class="btn-secondary" onclick="closeModal('reasonModal')">Annuler</button><button type="button" class="btn-primary" id="saveReasonBtn">Valider</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="showerModal">
+    <div class="modal">
+      <h3>🚿 Retard de douche</h3>
+      <p style="font-size:0.86rem; color:var(--muted); margin-bottom:14px;">Débite l'enfant en retard selon le barème et crédite le suivant (ou personne si c'est toi).</p>
+      <div class="form-group">
+        <label for="showerFromKid">Enfant en retard (débité)</label>
+        <select id="showerFromKid"></select>
+      </div>
+      <div class="form-group">
+        <label for="showerToKid">Doit payer à (crédité)</label>
+        <select id="showerToKid"></select>
+      </div>
+      <div class="form-group">
+        <label for="showerMinutes">Minutes de retard</label>
+        <input type="number" id="showerMinutes" min="1" step="1" value="1" />
+      </div>
+      <div class="info-note" style="font-size:0.78rem; margin-bottom:12px;">
+        <strong>Barème retard douche :</strong> 1 min = 1 • 2 min = 2 • 3 min = 3 • 4 min = 4 • 5 min = 5 • 6 min = 6 • 7 min = 8 • 8 min = 10 • 9 min = 13 • 10 min = 15 • 11 min = 18 • 12 min = 20 • 13 min = 23 • 14 min = 25 • 15 min = 30 (+5/min au-delà)
+      </div>
+      <div class="helper-result" style="margin-bottom:12px;">
+        <span id="showerPreview">Lucas : -1 chaton • Manon : +1 chaton</span>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeModal('showerModal')">Annuler</button>
+        <button type="button" class="btn-primary" id="saveShowerBtn">Appliquer le retard</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="baremeModal">
+    <div class="modal wide">
+      <h3 id="baremeModalTitle">📊 Tableau des récompenses — Rangs & Barème</h3>
+      <p id="baremeSubtitle" style="font-size:0.86rem; color:var(--muted); margin-bottom:12px;">Modifie l'intitulé des catégories, les rangs (1 à 10) et les valeurs du barème (1 à 5 étoiles) : tout se met à jour immédiatement.</p>
+      <div class="table-wrap">
+        <table class="bareme-table" id="ranksTable"></table>
+      </div>
+      <div class="sub-heading">Nombre de chatons par étoile (selon le rang)</div>
+      <div class="table-wrap">
+        <table class="bareme-table" id="starsGridTable"></table>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="resetRanksBtn">Réinitialiser rangs & barème</button>
+        <button type="button" class="btn-primary" onclick="closeModal('baremeModal')">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal">
+      <h3>⚙️ Taux de conversion & Synchronisation</h3>
+      <div id="ratesEditor"></div>
+      <div class="sub-heading">☁️ Configuration Firebase / Firestore</div>
+      <div class="info-note">
+        Les données partagées sont enregistrées dans Firestore (<code>compteur_chatons/famille</code>). Si Firebase n'est pas encore configuré ici, colle ta configuration Firebase JSON ci-dessous pour activer la synchronisation réelle multi-appareils.
+      </div>
+      <div class="form-group">
+        <label for="firebaseConfigInput">Config Firebase (JSON)</label>
+        <textarea id="firebaseConfigInput" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+      </div>
+      <div class="modal-actions" style="justify-content:space-between; margin-top:16px;">
+        <button type="button" class="btn-minus" id="resetAllBtn" style="font-size:0.82rem; padding:8px 12px;">🗑️ Tout remettre à 0</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('settingsModal')">Fermer</button>
+          <button type="button" class="btn-primary" id="saveSettingsBtn">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="linksModal">
+    <div class="modal">
+      <h3>🔗 Liens individuels (lecture seule)</h3>
+      <p style="font-size:0.86rem; color:var(--muted); margin-bottom:14px;">Partage chaque lien à l'enfant concerné : il verra uniquement sa carte et son historique, sans pouvoir modifier les points.</p>
+      <div id="kidLinksContainer"></div>
+      <div class="modal-actions"><button type="button" class="btn-primary" onclick="closeModal('linksModal')">Fermer</button></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { initializeFirestore, getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const LEVELS = [
+      { id: "vert", name: "Vert", color: "#22c55e", defaultRate: 0.05 },
+      { id: "jaune", name: "Jaune", color: "#eab308", defaultRate: 0.03 },
+      { id: "orange", name: "Orange", color: "#f97316", defaultRate: 0.01 },
+      { id: "rouge", name: "Rouge", color: "#ef4444", defaultRate: 0.00 },
+      { id: "noir", name: "Noir", color: "#1f2937", defaultRate: 0.00 }
+    ];
+    const SHOWER_DELAY_SCALE = {
+      0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 8, 8: 10, 9: 13, 10: 15, 11: 18, 12: 20, 13: 23, 14: 25, 15: 30
+    };
+    const CATEGORIES = [
+      { id: "affaires_veille", label: "Avoir préparé ses affaires la veille", ranks: { lucas: 8, manon: 7, jules: 8 } },
+      { id: "lever_heure", label: "Se lever à l'heure", ranks: { lucas: 10, manon: 4, jules: 7 } },
+      { id: "medicaments", label: "Prendre ses médicaments", ranks: { lucas: 2, manon: 6, jules: 3 } },
+      { id: "lave_vaisselle", label: "Mettre ses affaires au lave-vaisselle", ranks: { lucas: 4, manon: 2, jules: 6 } },
+      { id: "dents", label: "Se brosser les dents 2 fois / jour", ranks: { lucas: 5, manon: 9, jules: 5 } },
+      { id: "chambre", label: "Avoir une chambre rangée", ranks: { lucas: 6, manon: 3, jules: 1 } },
+      { id: "travail", label: "Se mettre au travail", ranks: { lucas: 7, manon: 5, jules: 10 } },
+      { id: "sport", label: "30 min de sport", ranks: { lucas: 1, manon: 10, jules: 9 } },
+      { id: "douche", label: "Douche", ranks: { lucas: 3, manon: 8, jules: 4 } },
+      { id: "respect", label: "Être respectueux envers les autres", ranks: { lucas: 9, manon: 1, jules: 2 } }
+    ];
+    const CAT_SVGS = {
+      lucas: `<svg viewBox="0 0 120 120" class="cat-avatar"><circle cx="60" cy="64" r="46" fill="#dcfce7"/><path d="M28 50 L22 18 L50 34 Z" fill="#f59e0b"/><path d="M92 50 L98 18 L70 34 Z" fill="#f59e0b"/><path d="M31 45 L27 25 L45 35 Z" fill="#fde68a"/><path d="M89 45 L93 25 L75 35 Z" fill="#fde68a"/><ellipse cx="60" cy="64" rx="36" ry="31" fill="#fbbf24"/><path d="M54 34 L60 44 L66 34 M44 37 L48 45 M76 37 L72 45" stroke="#d97706" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="47" cy="60" r="4.5" fill="#1f2937"/><circle cx="73" cy="60" r="4.5" fill="#1f2937"/><circle cx="48.5" cy="58.5" r="1.5" fill="#fff"/><circle cx="74.5" cy="58.5" r="1.5" fill="#fff"/><polygon points="56,69 64,69 60,74" fill="#f472b6"/><path d="M52 76 Q60 82 68 76" stroke="#1f2937" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M34 90 Q60 100 86 90 L82 102 Q60 110 38 102 Z" fill="#16a34a"/></svg>`,
+      manon: `<svg viewBox="0 0 120 120" class="cat-avatar"><circle cx="60" cy="64" r="46" fill="#fce7f3"/><path d="M28 50 L22 18 L50 34 Z" fill="#f8fafc" stroke="#fbcfe8" stroke-width="2"/><path d="M92 50 L98 18 L70 34 Z" fill="#f8fafc" stroke="#fbcfe8" stroke-width="2"/><path d="M31 45 L27 25 L45 35 Z" fill="#f9a8d4"/><path d="M89 45 L93 25 L75 35 Z" fill="#f9a8d4"/><ellipse cx="60" cy="64" rx="36" ry="31" fill="#ffffff" stroke="#fbcfe8" stroke-width="2"/><circle cx="47" cy="60" r="4.5" fill="#1f2937"/><circle cx="73" cy="60" r="4.5" fill="#1f2937"/><circle cx="48.5" cy="58.5" r="1.5" fill="#fff"/><circle cx="74.5" cy="58.5" r="1.5" fill="#fff"/><ellipse cx="38" cy="68" rx="5" ry="3" fill="#fbcfe8"/><ellipse cx="82" cy="68" rx="5" ry="3" fill="#fbcfe8"/><polygon points="56,69 64,69 60,74" fill="#ec4899"/><path d="M52 76 Q60 82 68 76" stroke="#1f2937" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M74 28 L86 22 L84 35 Z M96 32 L84 35 L92 43 Z" fill="#ec4899"/><circle cx="85" cy="33" r="3.5" fill="#be185d"/></svg>`,
+      jules: `<svg viewBox="0 0 120 120" class="cat-avatar"><circle cx="60" cy="64" r="46" fill="#dbeafe"/><path d="M28 50 L22 18 L50 34 Z" fill="#64748b"/><path d="M92 50 L98 18 L70 34 Z" fill="#64748b"/><path d="M31 45 L27 25 L45 35 Z" fill="#cbd5e1"/><path d="M89 45 L93 25 L75 35 Z" fill="#cbd5e1"/><ellipse cx="60" cy="64" rx="36" ry="31" fill="#94a3b8"/><circle cx="47" cy="60" r="4.5" fill="#1f2937"/><circle cx="73" cy="60" r="4.5" fill="#1f2937"/><circle cx="48.5" cy="58.5" r="1.5" fill="#fff"/><circle cx="74.5" cy="58.5" r="1.5" fill="#fff"/><polygon points="56,69 64,69 60,74" fill="#334155"/><path d="M52 76 Q60 82 68 76" stroke="#1f2937" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M36 91 L60 106 L84 91 Z" fill="#2563eb"/></svg>`
+    };
+
+    const STORAGE_KEY = "compteur_chatons_state_v1";
+    const FIREBASE_CFG_KEY = "compteur_chatons_firebase_cfg_v1";
+    const EMBEDDED_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDq09B54rsUDke1hk2GjgP6np6z_FfcyJo",
+      authDomain: "recompenses-chatons.firebaseapp.com",
+      projectId: "recompenses-chatons",
+      storageBucket: "recompenses-chatons.firebasestorage.app",
+      messagingSenderId: "927245474982",
+      appId: "1:927245474982:web:a60a8cd28768797cafa867"
+    };
+
+    // --- File System Access API (Sauvegarde automatique vers fichier unique) ---
+    const HANDLE_DB_NAME = "compteur_chatons_file_handles_v1";
+    const HANDLE_STORE_NAME = "handles";
+    let backupFileHandle = null;
+    let backupFilePermState = "none"; // "none" | "prompt" | "granted"
+
+    function openHandleDB() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject(new Error("IndexedDB indisponible"));
+        const req = indexedDB.open(HANDLE_DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(HANDLE_STORE_NAME)) {
+            db.createObjectStore(HANDLE_STORE_NAME);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveStoredFileHandle(handle) {
+      try {
+        const db = await openHandleDB();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(HANDLE_STORE_NAME, "readwrite");
+          tx.objectStore(HANDLE_STORE_NAME).put(handle, "backup_file");
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch (e) {}
+    }
+
+    async function loadStoredFileHandle() {
+      try {
+        const db = await openHandleDB();
+        return await new Promise((resolve, reject) => {
+          const tx = db.transaction(HANDLE_STORE_NAME, "readonly");
+          const req = tx.objectStore(HANDLE_STORE_NAME).get("backup_file");
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function updateFileSyncButtonUI() {
+      const btn = document.getElementById("fileSyncBtn");
+      if (!btn) return;
+      btn.classList.remove("btn-secondary", "btn-file-ok", "btn-file-warn");
+      if (!("showSaveFilePicker" in window)) {
+        btn.classList.add("btn-secondary");
+        btn.textContent = "💾 Sauvegarde non supportée";
+        btn.disabled = true;
+        return;
+      }
+      if (backupFileHandle && backupFilePermState === "granted") {
+        btn.classList.add("btn-file-ok");
+        btn.textContent = "💾 Sauvegarde auto OK";
+        btn.title = "Fichier lié : " + backupFileHandle.name + " (clic pour changer de fichier)";
+      } else if (backupFileHandle && backupFilePermState === "prompt") {
+        btn.classList.add("btn-file-warn");
+        btn.textContent = "💾 Réactiver fichier";
+        btn.title = "Clique pour réautoriser l'écriture dans " + backupFileHandle.name;
+      } else {
+        btn.classList.add("btn-secondary");
+        btn.textContent = "💾 Sauvegarde fichier";
+        btn.title = "Choisir un fichier .json (ex: dans Google Drive) pour la sauvegarde automatique";
+      }
+    }
+
+    async function writeBackupToFile(nextState) {
+      if (!backupFileHandle || backupFilePermState !== "granted") return;
+      try {
+        const writable = await backupFileHandle.createWritable();
+        const payload = {
+          app: "Compteur de Chatons",
+          updatedAt: new Date().toISOString(),
+          data: nextState
+        };
+        await writable.write(JSON.stringify(payload, null, 2));
+        await writable.close();
+      } catch (err) {
+        backupFilePermState = "prompt";
+        updateFileSyncButtonUI();
+      }
+    }
+
+    async function initFileSyncHandle() {
+      if (!("showSaveFilePicker" in window)) {
+        updateFileSyncButtonUI();
+        return;
+      }
+      const saved = await loadStoredFileHandle();
+      if (saved) {
+        backupFileHandle = saved;
+        try {
+          const perm = await saved.queryPermission({ mode: "readwrite" });
+          backupFilePermState = perm === "granted" ? "granted" : "prompt";
+        } catch (e) {
+          backupFilePermState = "prompt";
+        }
+      }
+      updateFileSyncButtonUI();
+    }
+
+    document.getElementById("fileSyncBtn").onclick = async () => {
+      if (lockedKidId || !("showSaveFilePicker" in window)) return;
+      try {
+        // Si un fichier était déjà mémorisé et en attente d'autorisation, un clic le réactive directement
+        if (backupFileHandle && backupFilePermState === "prompt") {
+          const perm = await backupFileHandle.requestPermission({ mode: "readwrite" });
+          if (perm === "granted") {
+            backupFilePermState = "granted";
+            updateFileSyncButtonUI();
+            await writeBackupToFile(state);
+            return;
+          }
+        }
+        const handle = await window.showSaveFilePicker({
+          suggestedName: "chatons-sauvegarde.json",
+          types: [{
+            description: "Sauvegarde JSON Compteur de Chatons",
+            accept: { "application/json": [".json"] }
+          }]
+        });
+        backupFileHandle = handle;
+        backupFilePermState = "granted";
+        await saveStoredFileHandle(handle);
+        updateFileSyncButtonUI();
+        await writeBackupToFile(state);
+      } catch (err) {
+        // Annulation par l'utilisateur
+      }
+    };
+
+    document.getElementById("restoreFileBtn").onclick = async () => {
+      if (lockedKidId) return;
+      try {
+        let rawText = "";
+        if ("showOpenFilePicker" in window) {
+          const [handle] = await window.showOpenFilePicker({
+            types: [{
+              description: "Sauvegarde JSON Compteur de Chatons",
+              accept: { "application/json": [".json"] }
+            }],
+            multiple: false
+          });
+          const file = await handle.getFile();
+          rawText = await file.text();
+          // On propose aussi de lier ce fichier pour les prochaines sauvegardes auto
+          if (confirm("Souhaites-tu aussi activer la sauvegarde automatique sur ce même fichier (" + handle.name + ") ?")) {
+            const perm = await handle.requestPermission({ mode: "readwrite" });
+            if (perm === "granted") {
+              backupFileHandle = handle;
+              backupFilePermState = "granted";
+              await saveStoredFileHandle(handle);
+              updateFileSyncButtonUI();
+            }
+          }
+        } else {
+          alert("Utilise un navigateur Chrome ou Edge récent pour restaurer un fichier.");
+          return;
+        }
+        const parsed = JSON.parse(rawText);
+        const extracted = (parsed && parsed.data && typeof parsed.data === "object") ? parsed.data : parsed;
+        if (!extracted || !Array.isArray(extracted.kids)) {
+          alert("Ce fichier ne semble pas être une sauvegarde valide du Compteur de Chatons.");
+          return;
+        }
+        if (!confirm("Remplacer les données actuelles par celles du fichier de sauvegarde ?")) return;
+        const prev = JSON.parse(JSON.stringify(state));
+        state = normalizeState(extracted);
+        persistState(true, prev);
+        alert("Sauvegarde restaurée avec succès !");
+      } catch (err) {
+        // Annulation ou erreur de lecture
+      }
+    };
+
+    function getShowerDelayKittens(minutes) {
+      const mins = Math.max(0, parseInt(minutes, 10) || 0);
+      if (mins <= 15) return SHOWER_DELAY_SCALE[mins];
+      return 30 + (mins - 15) * 5;
+    }
+
+    function clampRank(val) {
+      const n = parseInt(val, 10);
+      if (isNaN(n) || n < 1) return 1;
+      if (n > 10) return 10;
+      return n;
+    }
+
+    function getDefaultKittensForRankAndStars(rank, stars) {
+      const r = clampRank(rank);
+      const s = Math.min(5, Math.max(1, parseInt(stars, 10) || 1));
+      const oneStar = r <= 3 ? 1 : (r <= 7 ? 2 : 3);
+      const fiveStars = r <= 3 ? 6 : (r <= 7 ? 12 : 18);
+      if (s === 1) return oneStar;
+      if (s === 5) return fiveStars;
+      const step = (fiveStars - oneStar) / 4;
+      return Math.round(oneStar + step * (s - 1));
+    }
+
+    function createDefaultRanks() {
+      const map = {};
+      CATEGORIES.forEach(c => { map[c.id] = Object.assign({}, c.ranks); });
+      return map;
+    }
+
+    function createDefaultCategoryLabels() {
+      const map = {};
+      CATEGORIES.forEach(c => { map[c.id] = c.label; });
+      return map;
+    }
+
+    function createDefaultBaremeGrid() {
+      return [1, 2, 3, 4, 5].map(s =>
+        Array.from({ length: 10 }, (_, idx) => getDefaultKittensForRankAndStars(idx + 1, s))
+      );
+    }
+
+    function createDefaultState() {
+      return {
+        kids: [
+          { id: "kid_lucas", name: "Lucas", kittens: 0, level: "vert", themeAccent: "#22c55e", themeBorder: "#86efac", themeSoft: "#f0fdf4" },
+          { id: "kid_manon", name: "Manon", kittens: 0, level: "vert", themeAccent: "#ec4899", themeBorder: "#f9a8d4", themeSoft: "#fdf2f8" },
+          { id: "kid_jules", name: "Jules", kittens: 0, level: "vert", themeAccent: "#3b82f6", themeBorder: "#93c5fd", themeSoft: "#eff6ff" }
+        ],
+        rates: { vert: 0.05, jaune: 0.03, orange: 0.01, rouge: 0.00, noir: 0.00 },
+        ranks: createDefaultRanks(),
+        categoryLabels: createDefaultCategoryLabels(),
+        baremeGrid: createDefaultBaremeGrid(),
+        history: []
+      };
+    }
+
+    function normalizeRanks(rawRanks) {
+      const def = createDefaultRanks();
+      if (!rawRanks || typeof rawRanks !== "object") return def;
+      const out = {};
+      CATEGORIES.forEach(cat => {
+        const src = rawRanks[cat.id] || {};
+        out[cat.id] = {
+          lucas: clampRank(src.lucas !== undefined ? src.lucas : def[cat.id].lucas),
+          manon: clampRank(src.manon !== undefined ? src.manon : def[cat.id].manon),
+          jules: clampRank(src.jules !== undefined ? src.jules : def[cat.id].jules)
+        };
+      });
+      return out;
+    }
+
+    function normalizeCategoryLabels(rawLabels) {
+      const def = createDefaultCategoryLabels();
+      const out = {};
+      CATEGORIES.forEach(cat => {
+        const val = rawLabels && typeof rawLabels[cat.id] === "string" ? rawLabels[cat.id].trim() : "";
+        out[cat.id] = val || def[cat.id];
+      });
+      return out;
+    }
+
+    function normalizeBaremeGrid(rawGrid) {
+      const def = createDefaultBaremeGrid();
+      if (!Array.isArray(rawGrid) || rawGrid.length !== 5) return def;
+      return def.map((rowDef, sIdx) => {
+        const rawRow = Array.isArray(rawGrid[sIdx]) ? rawGrid[sIdx] : [];
+        return rowDef.map((valDef, rIdx) => {
+          const parsed = parseInt(rawRow[rIdx], 10);
+          return (!isNaN(parsed) && parsed >= 0) ? parsed : valDef;
+        });
+      });
+    }
+
+    function getKittensForRankAndStars(rank, stars) {
+      const r = clampRank(rank);
+      const s = Math.min(5, Math.max(1, parseInt(stars, 10) || 1));
+      const row = (state.baremeGrid && state.baremeGrid[s - 1]) || [];
+      const val = parseInt(row[r - 1], 10);
+      return (!isNaN(val) && val >= 0) ? val : getDefaultKittensForRankAndStars(r, s);
+    }
+
+    function getCategoryLabel(catId) {
+      const baseCat = CATEGORIES.find(c => c.id === catId);
+      const custom = state.categoryLabels && state.categoryLabels[catId];
+      return (typeof custom === "string" && custom.trim()) ? custom.trim() : (baseCat ? baseCat.label : catId);
+    }
+
+    function normalizeState(raw) {
+      const def = createDefaultState();
+      if (!raw || typeof raw !== "object") return def;
+      const kids = Array.isArray(raw.kids) && raw.kids.length === 3 ? raw.kids : def.kids;
+      return {
+        kids: kids.map((k, idx) => Object.assign({}, def.kids[idx], k)),
+        rates: Object.assign({}, def.rates, raw.rates || {}),
+        ranks: normalizeRanks(raw.ranks),
+        categoryLabels: normalizeCategoryLabels(raw.categoryLabels),
+        baremeGrid: normalizeBaremeGrid(raw.baremeGrid),
+        history: Array.isArray(raw.history) ? raw.history : []
+      };
+    }
+
+    function baseKidKey(id) {
+      return String(id || "").toLowerCase().trim().replace(/^kid_/, "");
+    }
+
+    function resolveLockedKidId(rawParam, kidsList) {
+      const targetKey = baseKidKey(rawParam);
+      if (!targetKey || !["lucas", "manon", "jules"].includes(targetKey)) return null;
+      const matchedKid = (kidsList || []).find(k => baseKidKey(k.id) === targetKey);
+      return matchedKid ? matchedKid.id : ("kid_" + targetKey);
+    }
+
+    function getSavedFirebaseConfig() {
+      if (EMBEDDED_FIREBASE_CONFIG && typeof EMBEDDED_FIREBASE_CONFIG === "object" && EMBEDDED_FIREBASE_CONFIG.projectId) {
+        return EMBEDDED_FIREBASE_CONFIG;
+      }
+      try {
+        const raw = localStorage.getItem(FIREBASE_CFG_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && parsed.projectId && parsed.apiKey) {
+          return parsed;
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    const rawEnfantParam = new URLSearchParams(window.location.search).get("enfant");
+    let state = (() => {
+      try { return normalizeState(JSON.parse(localStorage.getItem(STORAGE_KEY))); }
+      catch (e) { return createDefaultState(); }
+    })();
+    let lockedKidId = resolveLockedKidId(rawEnfantParam, state.kids);
+    let undoStack = [], historyFilter = lockedKidId || "all", activeReasonKidId = null, selectedStars = 1;
+    let dbRef = null, unsubscribeCloud = null, cloudEnabled = false, isApplyingCloud = false;
+
+    function setSyncStatus(mode, text) {
+      const badge = document.getElementById("syncBadge");
+      const label = document.getElementById("syncText");
+      badge.classList.remove("local", "error");
+      if (mode === "local") badge.classList.add("local");
+      if (mode === "error") badge.classList.add("error");
+      label.textContent = text;
+    }
+
+    function toFirestorePayload(st) {
+      const grid = normalizeBaremeGrid(st.baremeGrid);
+      const baremeRows = {};
+      [1, 2, 3, 4, 5].forEach((s, idx) => {
+        baremeRows["s" + s] = grid[idx];
+      });
+      return {
+        kids: st.kids,
+        rates: st.rates,
+        ranks: st.ranks,
+        categoryLabels: st.categoryLabels,
+        baremeRows: baremeRows,
+        history: st.history
+      };
+    }
+
+    function fromFirestorePayload(raw) {
+      if (!raw || typeof raw !== "object") return createDefaultState();
+      let grid = raw.baremeGrid;
+      if (!grid && raw.baremeRows && typeof raw.baremeRows === "object") {
+        grid = [1, 2, 3, 4, 5].map(s => raw.baremeRows["s" + s] || []);
+      }
+      return normalizeState(Object.assign({}, raw, { baremeGrid: grid }));
+    }
+
+    async function writeCloudState(nextState) {
+      if (!cloudEnabled || !dbRef || isApplyingCloud) return;
+      try {
+        await setDoc(dbRef, toFirestorePayload(nextState));
+        setSyncStatus("online", "Synchronisé (Firestore)");
+      } catch (err) {
+        const msg = (err && err.message) ? String(err.message) : "Erreur synchro cloud";
+        setSyncStatus("error", "Synchro : " + msg.slice(0, 60));
+      }
+    }
+
+    function persistState(pushUndo = true, prevSnapshot = null) {
+      if (pushUndo && prevSnapshot) {
+        undoStack.push(prevSnapshot);
+        if (undoStack.length > 20) undoStack.shift();
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      render();
+      writeCloudState(state);
+      writeBackupToFile(state);
+    }
+
+    async function initCloudSync() {
+      const cfg = getSavedFirebaseConfig();
+      if (!cfg) {
+        cloudEnabled = false;
+        setSyncStatus("local", "Sauvegarde locale (config Firebase à ajouter)");
+        return;
+      }
+
+      try {
+        if (unsubscribeCloud) {
+          unsubscribeCloud();
+          unsubscribeCloud = null;
+        }
+
+        let db;
+        if (!getApps().length) {
+          const app = initializeApp(cfg);
+          db = initializeFirestore(app, { experimentalForceLongPolling: true });
+        } else {
+          db = getFirestore(getApps()[0]);
+        }
+
+        dbRef = doc(db, "compteur_chatons", "famille");
+        cloudEnabled = true;
+        setSyncStatus("local", "Connexion Firestore...");
+
+        unsubscribeCloud = onSnapshot(
+          dbRef,
+          async (docSnap) => {
+            if (!docSnap.exists()) {
+              if (!docSnap.metadata.fromCache) {
+                try {
+                  await setDoc(dbRef, toFirestorePayload(state));
+                  setSyncStatus("online", "Synchronisé (Firestore)");
+                } catch (writeErr) {
+                  const wCode = (writeErr && writeErr.code) ? String(writeErr.code) : "";
+                  const wMsg = (writeErr && writeErr.message) ? String(writeErr.message) : "erreur";
+                  setSyncStatus("error", "Ecriture : " + (wCode || wMsg).slice(0, 60));
+                }
+              }
+              return;
+            }
+            if (docSnap.metadata.hasPendingWrites) return;
+
+            isApplyingCloud = true;
+            state = fromFirestorePayload(docSnap.data());
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            lockedKidId = resolveLockedKidId(rawEnfantParam, state.kids);
+            render();
+            writeBackupToFile(state);
+            setSyncStatus("online", "Synchronisé (Firestore)");
+            isApplyingCloud = false;
+          },
+          (err) => {
+            cloudEnabled = false;
+            const eCode = (err && err.code) ? String(err.code) : "";
+            const eMsg = (err && err.message) ? String(err.message) : "Erreur Firestore";
+            setSyncStatus("error", "Lecture : " + (eCode || eMsg).slice(0, 60));
+          }
+        );
+      } catch (e) {
+        cloudEnabled = false;
+        const mCode = (e && e.code) ? String(e.code) : "";
+        const mMsg = (e && e.message) ? String(e.message) : "Erreur connexion Firebase";
+        const full = mCode ? (mCode + " - " + mMsg) : mMsg;
+        setSyncStatus("error", "Init : " + full.slice(0, 60));
+      }
+    }
+
+    const formatEuro = (val) => val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+    function formatKittenWord(count) {
+      return Math.abs(count) > 1 ? "chatons" : "chaton";
+    }
+
+    function adjustKittens(kidId, delta, reason = "") {
+      if (lockedKidId || !delta) return;
+      const prev = JSON.parse(JSON.stringify(state));
+      const kid = state.kids.find(k => k.id === kidId);
+      if (!kid) return;
+      kid.kittens = kid.kittens + delta;
+      state.history.unshift({
+        id: Date.now() + Math.random(), kidId: kid.id, kidName: kid.name, delta: delta,
+        reason: reason || (delta > 0 ? "Ajout rapide" : "Retrait rapide"),
+        date: new Date().toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+      });
+      state.history = state.history.slice(0, 100);
+      persistState(true, prev);
+    }
+
+    function changeLevel(kidId, levelId) {
+      if (lockedKidId) return;
+      const prev = JSON.parse(JSON.stringify(state));
+      const kid = state.kids.find(k => k.id === kidId);
+      if (!kid || kid.level === levelId) return;
+      const lvl = LEVELS.find(l => l.id === levelId);
+      kid.level = levelId;
+      state.history.unshift({
+        id: Date.now() + Math.random(), kidId: kid.id, kidName: kid.name, delta: 0,
+        reason: "Passage en couleur " + (lvl ? lvl.name : levelId),
+        date: new Date().toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+      });
+      state.history = state.history.slice(0, 100);
+      persistState(true, prev);
+    }
+
+    window.closeModal = (id) => document.getElementById(id).classList.remove("open");
+
+    function getActiveKidRateInfo(kid) {
+      const currentLvl = LEVELS.find(l => l.id === kid.level) || LEVELS[0];
+      const rate = (state.rates[kid.level] !== undefined) ? state.rates[kid.level] : currentLvl.defaultRate;
+      return { levelName: currentLvl.name, rate: rate };
+    }
+
+    function updateHelperPreview() {
+      if (!activeReasonKidId) return;
+      const kid = state.kids.find(k => k.id === activeReasonKidId);
+      const kidKey = baseKidKey(kid.id);
+      const catId = document.getElementById("helperCategory").value;
+      const rank = clampRank(((state.ranks[catId] || {})[kidKey]) !== undefined ? (state.ranks[catId] || {})[kidKey] : 1);
+      const pts = getKittensForRankAndStars(rank, selectedStars);
+      document.querySelectorAll("#starsSelector .star-btn").forEach(btn => {
+        btn.classList.toggle("active", parseInt(btn.dataset.stars, 10) === selectedStars);
+      });
+      document.getElementById("helperSummary").textContent = "Rang " + rank + " • +" + pts + " " + formatKittenWord(pts);
+    }
+
+    function updateEuroSpendPreview() {
+      if (!activeReasonKidId) return;
+      const kid = state.kids.find(k => k.id === activeReasonKidId);
+      const info = getActiveKidRateInfo(kid);
+      const rawEuro = parseFloat(String(document.getElementById("euroSpendInput").value || "").replace(",", "."));
+      const summaryEl = document.getElementById("euroHelperSummary");
+      if (info.rate <= 0) {
+        summaryEl.textContent = "Couleur " + info.levelName + " (0,00 € / chaton) : conversion impossible";
+        return;
+      }
+      if (isNaN(rawEuro) || rawEuro <= 0) {
+        summaryEl.textContent = "Couleur " + info.levelName + " (" + formatEuro(info.rate) + " / chaton)";
+        return;
+      }
+      const kittensNeeded = Math.ceil((rawEuro - 1e-9) / info.rate);
+      const coveredEuro = kittensNeeded * info.rate;
+      summaryEl.textContent = formatEuro(rawEuro) + " → -" + kittensNeeded + " " + formatKittenWord(kittensNeeded) + " (" + formatEuro(coveredEuro) + ")";
+    }
+
+    function openReasonModal(kidId) {
+      activeReasonKidId = kidId;
+      selectedStars = 1;
+      const kid = state.kids.find(k => k.id === kidId);
+      const info = getActiveKidRateInfo(kid);
+      document.getElementById("reasonModalTitle").textContent = "Chatons de " + kid.name;
+      document.getElementById("euroHelperTitle").textContent = "💶 Dépenser / Déduire un montant en euros (" + info.levelName + " • " + formatEuro(info.rate) + "/chaton)";
+      document.getElementById("euroSpendInput").value = "";
+      document.getElementById("euroSpendReason").value = "";
+      document.getElementById("reasonDelta").value = "";
+      document.getElementById("reasonText").value = "";
+      const catSelect = document.getElementById("helperCategory");
+      catSelect.innerHTML = CATEGORIES.map(c => '<option value="' + c.id + '">' + getCategoryLabel(c.id) + '</option>').join("");
+      updateHelperPreview();
+      updateEuroSpendPreview();
+      document.getElementById("reasonModal").classList.add("open");
+    }
+
+    document.getElementById("helperCategory").onchange = updateHelperPreview;
+    document.querySelectorAll("#starsSelector .star-btn").forEach(btn => {
+      btn.onclick = () => {
+        selectedStars = parseInt(btn.dataset.stars, 10);
+        updateHelperPreview();
+      };
+    });
+
+    document.getElementById("applyHelperBtn").onclick = () => {
+      if (!activeReasonKidId) return;
+      const kid = state.kids.find(k => k.id === activeReasonKidId);
+      const kidKey = baseKidKey(kid.id);
+      const catId = document.getElementById("helperCategory").value;
+      const rank = clampRank(((state.ranks[catId] || {})[kidKey]) !== undefined ? (state.ranks[catId] || {})[kidKey] : 1);
+      const pts = getKittensForRankAndStars(rank, selectedStars);
+      document.getElementById("reasonDelta").value = pts;
+      const starWord = selectedStars > 1 ? "étoiles" : "étoile";
+      document.getElementById("reasonText").value = getCategoryLabel(catId) + " (" + selectedStars + " " + starWord + ")";
+    };
+
+    document.getElementById("euroSpendInput").oninput = updateEuroSpendPreview;
+    document.getElementById("applyEuroSpendBtn").onclick = () => {
+      if (!activeReasonKidId) return;
+      const kid = state.kids.find(k => k.id === activeReasonKidId);
+      const info = getActiveKidRateInfo(kid);
+      if (info.rate <= 0) {
+        alert("Impossible de convertir un montant en euros quand l'enfant est en couleur " + info.levelName + " (0,00 € / chaton).");
+        return;
+      }
+      const rawEuro = parseFloat(String(document.getElementById("euroSpendInput").value || "").replace(",", "."));
+      if (isNaN(rawEuro) || rawEuro <= 0) {
+        alert("Indique un montant en euros supérieur à 0.");
+        return;
+      }
+      const kittensNeeded = Math.ceil((rawEuro - 1e-9) / info.rate);
+      const customMotif = document.getElementById("euroSpendReason").value.trim();
+      document.getElementById("reasonDelta").value = -kittensNeeded;
+      document.getElementById("reasonText").value = (customMotif ? (customMotif + " — ") : "Achat / Dépense ") + formatEuro(rawEuro) + " (" + info.levelName + ")";
+    };
+
+    document.getElementById("saveReasonBtn").onclick = () => {
+      const delta = parseInt(document.getElementById("reasonDelta").value, 10);
+      const reason = document.getElementById("reasonText").value.trim();
+      if (!isNaN(delta) && delta !== 0 && activeReasonKidId) adjustKittens(activeReasonKidId, delta, reason);
+      closeModal("reasonModal");
+    };
+
+    function populateShowerToOptions() {
+      const fromId = document.getElementById("showerFromKid").value;
+      const toSelect = document.getElementById("showerToKid");
+      const previousTo = toSelect.value;
+      const otherKids = state.kids.filter(k => k.id !== fromId);
+      const optionsHtml = otherKids.map(k => '<option value="' + k.id + '">' + k.name + '</option>').join("")
+        + '<option value="parent">Moi / Parent (aucun enfant crédité)</option>';
+      toSelect.innerHTML = optionsHtml;
+      if (previousTo && (previousTo === "parent" || otherKids.some(k => k.id === previousTo))) {
+        toSelect.value = previousTo;
+      }
+    }
+
+    function updateShowerPreview() {
+      const fromId = document.getElementById("showerFromKid").value;
+      const toId = document.getElementById("showerToKid").value;
+      const mins = Math.max(1, parseInt(document.getElementById("showerMinutes").value, 10) || 1);
+      const total = getShowerDelayKittens(mins);
+      const fromKid = state.kids.find(k => k.id === fromId);
+      const fromName = fromKid ? fromKid.name : "";
+      if (toId === "parent") {
+        document.getElementById("showerPreview").textContent = fromName + " : -" + total + " " + formatKittenWord(total) + " • Parent : aucun crédit";
+      } else {
+        const toKid = state.kids.find(k => k.id === toId);
+        const toName = toKid ? toKid.name : "";
+        document.getElementById("showerPreview").textContent = fromName + " : -" + total + " " + formatKittenWord(total) + " • " + toName + " : +" + total + " " + formatKittenWord(total);
+      }
+    }
+
+    document.getElementById("showerBtn").onclick = () => {
+      if (lockedKidId) return;
+      const fromSelect = document.getElementById("showerFromKid");
+      fromSelect.innerHTML = state.kids.map(k => '<option value="' + k.id + '">' + k.name + '</option>').join("");
+      document.getElementById("showerMinutes").value = "1";
+      populateShowerToOptions();
+      updateShowerPreview();
+      document.getElementById("showerModal").classList.add("open");
+    };
+
+    document.getElementById("showerFromKid").onchange = () => {
+      populateShowerToOptions();
+      updateShowerPreview();
+    };
+    document.getElementById("showerToKid").onchange = updateShowerPreview;
+    document.getElementById("showerMinutes").oninput = updateShowerPreview;
+
+    document.getElementById("saveShowerBtn").onclick = () => {
+      if (lockedKidId) return;
+      const fromId = document.getElementById("showerFromKid").value;
+      const toId = document.getElementById("showerToKid").value;
+      const mins = parseInt(document.getElementById("showerMinutes").value, 10);
+      if (isNaN(mins) || mins <= 0) {
+        alert("Indique un nombre de minutes valide (au moins 1).");
+        return;
+      }
+      const fromKid = state.kids.find(k => k.id === fromId);
+      if (!fromKid) return;
+      const toKid = toId === "parent" ? null : state.kids.find(k => k.id === toId);
+      const total = getShowerDelayKittens(mins);
+      const prev = JSON.parse(JSON.stringify(state));
+      const nowStr = new Date().toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      const minWord = mins > 1 ? "minutes" : "minute";
+
+      fromKid.kittens = fromKid.kittens - total;
+
+      if (toKid) {
+        toKid.kittens = toKid.kittens + total;
+        state.history.unshift({
+          id: Date.now() + Math.random(), kidId: toKid.id, kidName: toKid.name, delta: total,
+          reason: "Retard douche de " + fromKid.name + " (" + mins + " " + minWord + ")",
+          date: nowStr
+        });
+        state.history.unshift({
+          id: Date.now() + Math.random() + 1, kidId: fromKid.id, kidName: fromKid.name, delta: -total,
+          reason: "Retard douche (" + mins + " " + minWord + " payées à " + toKid.name + ")",
+          date: nowStr
+        });
+      } else {
+        state.history.unshift({
+          id: Date.now() + Math.random(), kidId: fromKid.id, kidName: fromKid.name, delta: -total,
+          reason: "Retard douche (" + mins + " " + minWord + " — parent)",
+          date: nowStr
+        });
+      }
+
+      state.history = state.history.slice(0, 100);
+      persistState(true, prev);
+      closeModal("showerModal");
+    };
+
+    function escapeHtmlAttr(str) {
+      return String(str || '')
+        .replace(/&/g, '&')
+        .replace(/"/g, '"')
+        .replace(/</g, '<')
+        .replace(/>/g, '>');
+    }
+
+    function renderBaremeModal() {
+      const lockedKey = lockedKidId ? baseKidKey(lockedKidId) : null;
+      const kidsCols = lockedKey
+        ? state.kids.filter(k => baseKidKey(k.id) === lockedKey)
+        : state.kids;
+
+      document.getElementById("baremeModalTitle").textContent = lockedKey
+        ? ("📊 Rangs & Barème — " + kidsCols[0].name)
+        : "📊 Tableau des récompenses — Rangs & Barème";
+      document.getElementById("baremeSubtitle").textContent = lockedKey
+        ? "Rangs attribués par catégorie et barème de conversion en chatons selon le nombre d'étoiles (1 à 5)."
+        : "Modifie l'intitulé des catégories, les rangs (1 à 10) et les valeurs du barème (1 à 5 étoiles) : tout se met à jour immédiatement.";
+      document.getElementById("resetRanksBtn").style.display = lockedKey ? "none" : "inline-flex";
+
+      const ranksHead = "<tr><th>Catégorie</th>" + kidsCols.map(k => "<th>" + k.name + "</th>").join("") + "</tr>";
+      const ranksBody = CATEGORIES.map(cat => {
+        const labelCell = lockedKey
+          ? "<td>" + getCategoryLabel(cat.id) + "</td>"
+          : '<td><input type="text" class="cat-label-input" data-catlabel="' + cat.id + '" value="' + escapeHtmlAttr(getCategoryLabel(cat.id)) + '" /></td>';
+        const cells = kidsCols.map(k => {
+          const kKey = baseKidKey(k.id);
+          const currentRank = clampRank(((state.ranks[cat.id] || {})[kKey]) !== undefined ? (state.ranks[cat.id] || {})[kKey] : 1);
+          if (lockedKey) return "<td><strong>" + currentRank + "</strong></td>";
+          const opts = Array.from({ length: 10 }, (_, i) => i + 1)
+            .map(r => '<option value="' + r + '" ' + (r === currentRank ? "selected" : "") + '>' + r + '</option>').join("");
+          return '<td><select class="rank-select" data-cat="' + cat.id + '" data-kidkey="' + kKey + '">' + opts + '</select></td>';
+        }).join("");
+        return "<tr>" + labelCell + cells + "</tr>";
+      }).join("");
+      document.getElementById("ranksTable").innerHTML = "<thead>" + ranksHead + "</thead><tbody>" + ranksBody + "</tbody>";
+
+      if (!lockedKey) {
+        document.querySelectorAll("#ranksTable .cat-label-input").forEach(inp => {
+          inp.onchange = () => {
+            const prev = JSON.parse(JSON.stringify(state));
+            const catId = inp.dataset.catlabel;
+            const trimmed = inp.value.trim();
+            const fallback = (CATEGORIES.find(c => c.id === catId) || { label: catId }).label;
+            state.categoryLabels[catId] = trimmed || fallback;
+            persistState(true, prev);
+            renderBaremeModal();
+          };
+        });
+
+        document.querySelectorAll("#ranksTable .rank-select").forEach(sel => {
+          sel.onchange = () => {
+            const prev = JSON.parse(JSON.stringify(state));
+            const catId = sel.dataset.cat;
+            const kKey = sel.dataset.kidkey;
+            if (!state.ranks[catId]) state.ranks[catId] = {};
+            state.ranks[catId][kKey] = clampRank(sel.value);
+            persistState(true, prev);
+            renderBaremeModal();
+          };
+        });
+      }
+
+      const ranksArr = Array.from({ length: 10 }, (_, i) => i + 1);
+      const starRows = [1, 2, 3, 4, 5].map(s => {
+        const label = s === 1 ? "Nb de chatons pour 1 étoile" : ("Nb de chatons pour " + s + " étoiles");
+        const rowCells = ranksArr.map(r => {
+          const val = getKittensForRankAndStars(r, s);
+          if (lockedKey) return "<td>" + val + "</td>";
+          return '<td><input type="number" min="0" step="1" class="bareme-cell-input" data-star="' + s + '" data-rank="' + r + '" value="' + val + '" /></td>';
+        }).join("");
+        return "<tr><td>" + label + "</td>" + rowCells + "</tr>";
+      }).join("");
+      document.getElementById("starsGridTable").innerHTML =
+        "<thead><tr><th>Rang</th>" + ranksArr.map(r => "<th>" + r + "</th>").join("") + "</tr></thead><tbody>" + starRows + "</tbody>";
+
+      if (!lockedKey) {
+        document.querySelectorAll("#starsGridTable .bareme-cell-input").forEach(inp => {
+          inp.onchange = () => {
+            const prev = JSON.parse(JSON.stringify(state));
+            const s = parseInt(inp.dataset.star, 10);
+            const r = parseInt(inp.dataset.rank, 10);
+            const parsed = parseInt(inp.value, 10);
+            const cleanVal = (!isNaN(parsed) && parsed >= 0) ? parsed : 0;
+            state.baremeGrid[s - 1][r - 1] = cleanVal;
+            persistState(true, prev);
+            renderBaremeModal();
+          };
+        });
+      }
+    }
+
+    document.getElementById("baremeBtn").onclick = () => {
+      renderBaremeModal();
+      document.getElementById("baremeModal").classList.add("open");
+    };
+
+    document.getElementById("resetRanksBtn").onclick = () => {
+      const prev = JSON.parse(JSON.stringify(state));
+      state.ranks = createDefaultRanks();
+      state.categoryLabels = createDefaultCategoryLabels();
+      state.baremeGrid = createDefaultBaremeGrid();
+      persistState(true, prev);
+      renderBaremeModal();
+    };
+
+    document.getElementById("undoBtn").onclick = () => {
+      if (undoStack.length && !lockedKidId) {
+        state = undoStack.pop();
+        persistState(false);
+      }
+    };
+
+    document.getElementById("settingsBtn").onclick = () => {
+      document.getElementById("ratesEditor").innerHTML = LEVELS.map(l => {
+        const currentRate = (state.rates[l.id] !== undefined) ? state.rates[l.id] : l.defaultRate;
+        return '<div class="rate-row"><div class="rate-color-info"><span class="rate-swatch" style="background:' + l.color + '"></span><span>' + l.name + '</span></div><div class="rate-input-wrap"><input type="number" step="0.01" min="0" data-level="' + l.id + '" value="' + currentRate.toFixed(2) + '" /><span>€ / chaton</span></div></div>';
+      }).join("");
+      const savedCfg = getSavedFirebaseConfig();
+      document.getElementById("firebaseConfigInput").value = savedCfg ? JSON.stringify(savedCfg, null, 2) : "";
+      document.getElementById("settingsModal").classList.add("open");
+    };
+
+    document.getElementById("saveSettingsBtn").onclick = async () => {
+      const prev = JSON.parse(JSON.stringify(state));
+      document.querySelectorAll("#ratesEditor input").forEach(inp => {
+        const val = parseFloat(inp.value);
+        if (!isNaN(val) && val >= 0) state.rates[inp.dataset.level] = val;
+      });
+
+      const rawCfgText = document.getElementById("firebaseConfigInput").value.trim();
+      if (rawCfgText) {
+        try {
+          const parsedCfg = JSON.parse(rawCfgText);
+          if (!parsedCfg || !parsedCfg.projectId || !parsedCfg.apiKey) {
+            alert("La configuration Firebase doit contenir au minimum 'apiKey' et 'projectId'.");
+            return;
+          }
+          localStorage.setItem(FIREBASE_CFG_KEY, JSON.stringify(parsedCfg));
+        } catch (err) {
+          alert("JSON Firebase invalide. Vérifie la syntaxe avant d'enregistrer.");
+          return;
+        }
+      } else {
+        localStorage.removeItem(FIREBASE_CFG_KEY);
+      }
+
+      persistState(true, prev);
+      closeModal("settingsModal");
+      await initCloudSync();
+    };
+
+    document.getElementById("resetAllBtn").onclick = () => {
+      if (!confirm("Remettre les compteurs de Lucas, Manon et Jules à zéro et effacer l'historique ?")) return;
+      const prev = JSON.parse(JSON.stringify(state));
+      state = createDefaultState();
+      persistState(true, prev);
+      closeModal("settingsModal");
+    };
+
+    document.getElementById("linksBtn").onclick = () => {
+      const baseUrl = window.location.href.split("?")[0].split("#")[0];
+      document.getElementById("kidLinksContainer").innerHTML = state.kids.map(k => {
+        const url = baseUrl + "?enfant=" + encodeURIComponent(k.id);
+        return '<div class="link-box"><div class="link-box-top"><span>' + k.name + '</span><button type="button" class="btn-secondary" style="padding:5px 10px; font-size:0.8rem;" onclick="navigator.clipboard.writeText(\'' + url + '\'); this.textContent=\'Copié !\'">Copier</button></div><div class="link-url">' + url + '</div></div>';
+      }).join("");
+      document.getElementById("linksModal").classList.add("open");
+    };
+
+    function render() {
+      document.getElementById("parentActions").style.display = lockedKidId ? "none" : "flex";
+      document.getElementById("undoBtn").disabled = undoStack.length === 0;
+      const grid = document.getElementById("kidsGrid");
+      const visibleKids = lockedKidId ? state.kids.filter(k => baseKidKey(k.id) === baseKidKey(lockedKidId)) : state.kids;
+      grid.classList.toggle("single-view", Boolean(lockedKidId));
+      grid.innerHTML = visibleKids.map(kid => {
+        const key = baseKidKey(kid.id);
+        const currentLvl = LEVELS.find(l => l.id === kid.level) || LEVELS[0];
+        const rate = (state.rates[kid.level] !== undefined) ? state.rates[kid.level] : currentLvl.defaultRate;
+        const dotsHtml = LEVELS.map(l => '<button type="button" class="level-dot ' + (kid.level === l.id ? "active" : "") + '" style="background:' + l.color + '" title="' + l.name + '" ' + (lockedKidId ? "disabled" : ('data-kid="' + kid.id + '" data-lvl="' + l.id + '"')) + '></button>').join("");
+        const controlsHtml = lockedKidId
+          ? '<button type="button" class="btn-reason" id="kidBaremeBtn">📊 Voir mes rangs & le barème</button>'
+          : ('<div class="quick-controls"><button type="button" class="btn-minus" data-kid="' + kid.id + '" data-delta="-5">-5</button><button type="button" class="btn-minus" data-kid="' + kid.id + '" data-delta="-1">-1</button><button type="button" class="btn-plus" data-kid="' + kid.id + '" data-delta="1">+1</button><button type="button" class="btn-plus" data-kid="' + kid.id + '" data-delta="5">+5</button></div><button type="button" class="btn-reason" data-reason-kid="' + kid.id + '">± Ajouter / Dépenser avec motif</button>');
+        const isNeg = kid.kittens < 0;
+        const moneyClass = (rate === 0 || isNeg) ? "zero" : "";
+        return '<article class="kid-card" style="--theme-accent:' + kid.themeAccent + '; --theme-border:' + kid.themeBorder + '; --theme-soft:' + kid.themeSoft + '">' + (CAT_SVGS[key] || "") + '<div class="kid-name">' + kid.name + '</div><div class="level-selector">' + dotsHtml + '</div><div class="level-label">Couleur ' + currentLvl.name + ' • ' + formatEuro(rate) + ' / chaton</div><div class="score-box"><div class="kittens-count ' + (isNeg ? "negative" : "") + '">' + kid.kittens + '</div><div class="kittens-unit">' + formatKittenWord(kid.kittens) + '</div><div class="money-pill ' + moneyClass + '">' + formatEuro(kid.kittens * rate) + '</div></div>' + controlsHtml + '</article>';
+      }).join("");
+
+      if (!lockedKidId) {
+        grid.querySelectorAll("[data-delta]").forEach(btn => btn.onclick = () => adjustKittens(btn.dataset.kid, parseInt(btn.dataset.delta, 10)));
+        grid.querySelectorAll("[data-lvl]").forEach(btn => btn.onclick = () => changeLevel(btn.dataset.kid, btn.dataset.lvl));
+        grid.querySelectorAll("[data-reason-kid]").forEach(btn => btn.onclick = () => openReasonModal(btn.dataset.reasonKid));
+      } else {
+        const kidBaremeBtn = document.getElementById("kidBaremeBtn");
+        if (kidBaremeBtn) kidBaremeBtn.onclick = () => { renderBaremeModal(); document.getElementById("baremeModal").classList.add("open"); };
+      }
+
+      const filtersBox = document.getElementById("historyFilters");
+      if (lockedKidId) { filtersBox.innerHTML = ""; } else {
+        const tabs = [{ id: "all", name: "Tous" }].concat(state.kids.map(k => ({ id: k.id, name: k.name })));
+        filtersBox.innerHTML = tabs.map(t => '<button type="button" class="filter-tab ' + (historyFilter === t.id ? "active" : "") + '" data-filter="' + t.id + '">' + t.name + '</button>').join("");
+        filtersBox.querySelectorAll("[data-filter]").forEach(btn => btn.onclick = () => { historyFilter = btn.dataset.filter; render(); });
+      }
+
+      const list = document.getElementById("historyList");
+      const items = state.history.filter(h => historyFilter === "all" || baseKidKey(h.kidId) === baseKidKey(historyFilter));
+      list.innerHTML = !items.length ? '<li class="empty-state">Aucun mouvement enregistré pour le moment.</li>' : items.map(h => {
+        const cls = h.delta > 0 ? "delta-pos" : (h.delta < 0 ? "delta-neg" : "delta-neu");
+        const badgeTxt = h.delta > 0 ? ("+" + h.delta + " 🐱") : (h.delta < 0 ? (h.delta + " 🐱") : "Couleur");
+        const titleTxt = lockedKidId ? h.reason : (h.kidName + " — " + h.reason);
+        return '<li class="history-item"><div class="history-left"><strong>' + titleTxt + '</strong><span class="history-meta">' + h.date + '</span></div><span class="delta-badge ' + cls + '">' + badgeTxt + '</span></li>';
+      }).join("");
+    }
+
+    render();
+    initFileSyncHandle();
+    initCloudSync();
+  </script>
+</body>
+</html>
