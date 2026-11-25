@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script>
+  const enfant = new URLSearchParams(window.location.search).get('enfant');
+  const manifests = {
+    kid_lucas: 'manifest-lucas.json',
+    kid_manon: 'manifest-manon.json',
+    kid_jules: 'manifest-jules.json'
+  };
+  const manifestLink = document.createElement('link');
+  manifestLink.rel = 'manifest';
+  manifestLink.href = manifests[enfant] || 'manifest.json';
+  document.head.appendChild(manifestLink);
+</script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compteur de Chatons</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="manifest" href="manifest.json" />
+  
   <meta name="theme-color" content="#2b2927" />
   <link rel="apple-touch-icon" href="icon.svg" />
   <style>
