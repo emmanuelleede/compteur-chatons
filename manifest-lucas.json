@@ -1,9 +1,15 @@
 {
-  "name": "Chatons de Lucas",
+  "name": "Compteur de Chatons - Lucas",
   "short_name": "Lucas",
-  "start_url": "./lucas.html",
+  "start_url": "./?enfant=kid_lucas",
   "display": "standalone",
   "background_color": "#f6f4f0",
-  "theme_color": "#22c55e",
-  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "theme_color": "#2b2927",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }

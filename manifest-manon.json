@@ -1,9 +1,15 @@
 {
-  "name": "Chatons de Manon",
+  "name": "Compteur de Chatons - Manon",
   "short_name": "Manon",
-  "start_url": "./manon.html",
+  "start_url": "./?enfant=kid_manon",
   "display": "standalone",
   "background_color": "#f6f4f0",
-  "theme_color": "#ec4899",
-  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "theme_color": "#2b2927",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }

@@ -1,9 +1,15 @@
 {
-  "name": "Chatons de Jules",
+  "name": "Compteur de Chatons - Jules",
   "short_name": "Jules",
-  "start_url": "./jules.html",
+  "start_url": "./?enfant=kid_jules",
   "display": "standalone",
   "background_color": "#f6f4f0",
-  "theme_color": "#3b82f6",
-  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "theme_color": "#2b2927",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }
